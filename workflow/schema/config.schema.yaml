@@ -1,0 +1,23 @@
+$schema: "http://json-schema.org/draft-04/schema#"
+
+description: Snakemake configuration file
+
+type: object
+
+properties:
+
+  umicollapse:
+    description: Singularity image to execute UMICollapse (FB)
+    type       : string
+
+  units:
+    type: string
+    description: path to units.tsv file containing fastq paths and sample names
+    
+  resources:
+    type: string
+    description: path to resources.yaml file containing resources used by each rule
+
+  larry_config:
+    type: string
+    description: path to larry_config.yaml containing the configuration to process LARRY barcodes

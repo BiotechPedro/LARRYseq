@@ -1,0 +1,11 @@
+# Singularity images used by the pipeline
+# --------------------------------------------------------------------------------
+singularity:
+  umicollapse             : docker://dfernand/umicollapse:07506e661496033ca059e04a7771633b7b70721f
+
+
+# Location of configuration files. This MUST NOT be modified.
+# --------------------------------------------------------------------------------
+units        : config/samples/units.tsv
+resources    : config/resources.yaml
+larry_config : config/larry_config.yaml

@@ -1,0 +1,94 @@
+import pandas as pd
+import yaml
+from snakemake.utils import validate
+from snakemake.utils import min_version
+
+min_version("8.4.7") # Set minimum snakemake version to run the pipeline
+
+configfile: "config/config.yaml"
+container : "docker://condaforge/mambaforge:4.10.3-6"
+
+
+# Load sample sheet and cluster configuration, config file and validate structures
+#-----------------------------------------------------------------------------------------------------------------------
+
+# Load units
+units       = pd.read_csv(config["units"], dtype = str, sep = "\t").set_index(["sample_id", "lib_type", "lane"], drop = False).sort_index()
+units.index = units.index.set_levels([i.astype(str) for i in units.index.levels])  # enforce str in index
+
+# load sample_config and transfrom it to dict format
+#sample_config = pd.read_csv(config["sample_config"], sep = "\t").set_index("sample_id", drop = False)
+
+# Resources and cell hashing information yaml files
+RESOURCES    = yaml.load(open(config['resources'], 'r'), Loader=yaml.FullLoader)
+#CELL_HASHING = yaml.load(open(config['cell_hashing'], 'r'), Loader=yaml.FullLoader)
+LARRY        = yaml.load(open(config['larry_config'], 'r'), Loader=yaml.FullLoader)
+
+# Validate structures
+validate(units, schema = "schema/units.schema.yaml")
+#validate(sample_config, schema = "schema/sample_config.schema.yaml")
+validate(config, schema = "schema/config.schema.yaml")
+#validate(CELL_HASHING, schema = "schema/cell_hashing.schema.yaml")
+validate(LARRY, schema = "schema/larry_config.schema.yaml")
+
+# Store sample names, larry colors and lib tyes in variables.
+#sample_config = sample_config.to_dict()
+SAMPLES       = set(units["sample_id"])
+LARRY_COLORS  = [color for color in LARRY["bc_patterns"].values()] if LARRY["feature_bc"] else None
+
+
+# Rules
+#-----------------------------------------------------------------------------------------------------------------------
+include: "rules/helper_functions.smk"
+include: "rules/prepare_fastqs.smk"
+#include: "rules/create_cellranger_libraries.smk"
+include: "rules/larry_processing.smk"
+#include: "rules/counts.smk"
+#include: "rules/seurat_preprocessing.smk"
+
+localrules: all, clean_names#, clean_names_atac
+
+# Create a small dictionary with the library types corresponding to each sample. This is done in this way to be able to 
+# execute the pipeline without larry (fb) or cellhashing also when those fastq files are present in the units.tsv file.
+
+#SAMPLE_LIB_DICT = {key: set() for key in SAMPLES}
+#for sample,lib_type in zip(units["sample_id"].values, units["lib_type"].values):
+#    if not is_feature_bc() and lib_type == "FB":
+#        next
+#    elif not is_cell_hashing(sample) and lib_type == "CH":
+#        next
+#    else:
+#        SAMPLE_LIB_DICT[sample].add(lib_type)
+
+
+# Rule all
+#-----------------------------------------------------------------------------------------------------------------------
+# Define target files based on pipeline
+
+#if config["cellranger_count"]["10x_pipeline"] == "GEX" and is_feature_bc():
+#    target_files = [
+#        "results/04_RNA-exploration/RNA_exploration.html",
+#        expand("results/05_barcode-exploration/{sample}_barcode-summary.html", sample = SAMPLES)
+#        ]
+#
+#elif config["cellranger_count"]["10x_pipeline"] in ["GEX", "ARC"] and not is_feature_bc():
+#    target_files = "results/04_RNA-exploration/RNA_exploration.html"
+#
+#elif config["cellranger_count"]["10x_pipeline"] == "ARC" and is_feature_bc():
+#    target_files = [
+#        "results/04_RNA-exploration/RNA_exploration.html",
+#        expand("results/05_barcode-exploration/{sample}_barcode-summary.html", sample = SAMPLES)
+#        ]
+#
+#elif config["cellranger_count"]["10x_pipeline"] == "ATAC":
+#    target_files = expand("results/01_counts/{sample}/outs/filtered_feature_bc_matrix.h5", sample = SAMPLES)
+
+target_files = expand("results/01_collapsing/{sample}_FB_S1_L001_{read_fb}_001_{larry_color}_collapsed-hd{hd}.csv",
+                      sample = SAMPLES,
+                      read_fb = LARRY["read_feature_bc"],
+                      larry_color = LARRY_COLORS,
+                      hd = LARRY["hamming_distance"])
+
+rule all:
+    input:
+        target_files

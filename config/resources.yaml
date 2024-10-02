@@ -1,0 +1,16 @@
+# By rule resources
+# --------------------------------------------------------------------------------
+
+# mem_mb has to be specified in megabytes (To transform gb to mb just do gb*1000)
+merge_lanes:
+    runtime: 15
+
+collapse_fastq_hd:
+    mem_mb: 30000
+    runtime: 300
+    retries: 3
+
+extract_barcodes:
+    mem_mb: 50000
+    runtime: 90
+    retries: 3
