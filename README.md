@@ -85,7 +85,7 @@ Inside the file, and also in the file `workflow/schema/config.schema.yaml` you c
 * `feature_bc`: Does data contain barcodes? set `True` or `False`
 * `read_feature_bc`: In which fastq (fw or rv) are located LARRY barcodes. Usually is the `R2`.
 * `read_cellular_bc`: In which fastq (fw or rv) are located cellular barcodes. Usually is the `R1`. This is the opposite fastq than `read_feature_bc`.
-* `hamming_distance`: The hamming distance that will be used to collapse LARRY barcodes. We have seen that for a barcode of 20 nucleotides in length, `3` or `4` are good values.
+* `hamming_distance`: Minimal substitution distance allowed for LARRY barcodes to be different. In other words, every sequence with a distance below this threshold will be collapsed. We have seen that for a barcode of 20 nucleotides in length, collapsing by `3` or `4` are good values, i.e. a `hamming_distance` of 4 or 5. One can read more about collapsing barcodes in the [Supp. Methods of this article](https://doi.org/10.1038/s41586-020-2503-6). More info about the collapsing at [UMIColapse repo](https://github.com/Daniel-Liu-c0deb0t/UMICollapse).
 * `bc_patterns`: The patterns of the LARRY barcodes integrated in the sequenced cells. It has the following structure:
 
     ```yaml
